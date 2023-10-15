@@ -1,0 +1,89 @@
+https://github.com/badtuxx/CertifiedContainersExpert
+-------------------------------------------------------
+Container engine: docker e podman, não conversa com o kernel, responsavel pela criacao do ambiente, rede,storage etc...
+
+Container runtime: é quem conversa com o kernel, garante o isolamento e garantia da execução do container.
+    ex: "containerd do docker" , "runC" , Sandbox
+
+Nodes:
+    Control Plane:
+        Componentes:
+            etcd (guarda o estado do cluster, só conversa com o "kube api server")
+            kube api server (cerebro do cluster, quem se comunica com todo o cluster)
+            kube sckeduler: realiza os agendamentos e controla as criacoes destino dos containers 
+            kube controler manager:
+    Workers
+        Componentes:
+            kublet: agente do kubernets que conversao com o api
+            kube proxy: responsavel pela comunicao externa
+
+Portas TCP e UDP:
+    API server: 6443 - TCP
+    ETCD: 2379-2380 - TCP
+    kubelet: 10250 - TCP
+    kube sckeduler: 10251 - TCP
+    kube controler: 10252 - TCP
+    Node port: 30000-32767 - TCP
+    Weave net: 6783-6784 - TCP/UDP
+
+POD: pode possuir 1 ou mais containers e comartilha recurso com quem esta dentro dele
+    exemplo: um pod com 2 cointainer possui 1 IP e cada porta nao pode se repetir
+
+Deployment: garante o staart do serviço
+
+Replica Set: serviço q garante a quantidade de replicas
+
+instalando kubectl:
+https://github.com/badtuxx/CertifiedContainersExpert/tree/main/DescomplicandoKubernetes/day-1#instalando-e-customizando-o-kubectl
+
+link para install tools como kind, minikube kubectl etc...
+https://kubernetes.io/docs/tasks/tools/
+
+Laboratorio com kind:
+    kind create cluster (cria cluster com um nó)
+    kind delete cluster (apaga cluster)
+
+    criando cluster k8s com kind com mais de um nó:
+        criar uma pasta chamada kind >> mkdir kind
+        dentro dela criar um arquivo cluster.yaml com o seguint:
+            # three node (two workers) cluster config
+            kind: Cluster
+            apiVersion: kind.x-k8s.io/v1alpha4
+            nodes:
+            - role: control-plane
+            - role: worker
+            - role: worker
+        Criando cluster kind com o .yaml    
+        "kind cluster create --config cluster.yaml --name clusterkind"
+
+
+Comando para gerenciar o cluster.
+    kubectl get nodes
+    kubectl get namespaces
+    kubectl get pods -A (lista todos os pods do cluster)
+    kubectl get pods -n kube-system (exibe os pods dentro de uma "namesapce -n" de nome kube-system)
+    kubectl get pods -n kube-system -o wide (o parametro -o wide exibe mais informações)
+    kubectl get deployment
+    kubectl get "services" ou "svc que é a abreviação"
+    kubectl get replicaset
+    entre outros..........
+
+Namespaces:
+forma de se organizar as aplicações, podendo se aplicar regras de comunicação permitindo ou restringindo entre namespaces
+os pods de gerencia do kubernet ficam na "namespaces" de nome "kube-system"
+
+Criando, acessando e deletando pods:
+    kubectl run --image nginx --port 80 teste-nginx
+    kubectl exec -it teste-nginx -- bash ("--" é seguido sempre do comando exemplo: "-- ls /etc")
+        o terminal muda para <container>/#
+    kubectl expose pods teste-nginx (expoe a porta do pod no cluster)
+    kubectl expose pods teste-nginx --type NodePort
+        (expoe a porta do pod para o cluster em porta alta exemplo 80:30692 onde 80 é a porta do container e 30692 a do serviço exposto ao cluster)
+    kubectl get services ou svc (visualiza o serviço criado como NodePort)
+    kubectl delete pods teste-nginx (deleta o pod)
+
+Criando .yaml de um pod com output do parametro dry-run:
+    kubectl run --image nginx --port 80 teste-nginx --dry-run=client -o yaml >> teste-nginx.yaml
+
+Criando pods com arquivo de definicão yaml:
+    kubectl apply -f teste-nginx.yaml
